@@ -26,20 +26,26 @@ public final class Context {
     public static final int LOGOUT = 4;
     public static final int BECOME_CLIENT = 5;
     public static final int BECOME_CLERK = 6;
+    public static final int CLIENT_RECORDS = 7;
+    public static final int BACK = 8;
 
     private static final int RETURN = -1;
     private static final int TERMINATED = -2;
 
     private static final int[][] TRANSITIONS = {
-        // exit, client login, clerk login, manager login, logout, become client, become clerk
+        // exit, client login, clerk login, manager login, logout, become client, become clerk,
+        // client records, back
         {TERMINATED, ClientMenuState.ID, ClerkMenuState.ID, ManagerMenuState.ID,
-            OpeningState.ID, OpeningState.ID, OpeningState.ID},
+            OpeningState.ID, OpeningState.ID, OpeningState.ID, OpeningState.ID, OpeningState.ID},
         {ClientMenuState.ID, ClientMenuState.ID, ClientMenuState.ID, ClientMenuState.ID,
-            RETURN, ClientMenuState.ID, ClientMenuState.ID},
+            RETURN, ClientMenuState.ID, ClientMenuState.ID, ClientMenuState.ID, ClientMenuState.ID},
         {ClerkMenuState.ID, ClerkMenuState.ID, ClerkMenuState.ID, ClerkMenuState.ID,
-            RETURN, ClientMenuState.ID, ClerkMenuState.ID},
+            RETURN, ClientMenuState.ID, ClerkMenuState.ID, ClerkClientsState.ID, ClerkMenuState.ID},
         {ManagerMenuState.ID, ManagerMenuState.ID, ManagerMenuState.ID, ManagerMenuState.ID,
-            RETURN, ManagerMenuState.ID, ClerkMenuState.ID}
+            RETURN, ManagerMenuState.ID, ClerkMenuState.ID, ManagerMenuState.ID, ManagerMenuState.ID},
+        {ClerkClientsState.ID, ClerkClientsState.ID, ClerkClientsState.ID, ClerkClientsState.ID,
+            ClerkClientsState.ID, ClerkClientsState.ID, ClerkClientsState.ID,
+            ClerkClientsState.ID, RETURN}
     };
 
     /** Asks the user for text and shows messages. Swing dialogs are used by default. */
@@ -72,7 +78,8 @@ public final class Context {
         new OpeningState(),
         new ClientMenuState(),
         new ClerkMenuState(),
-        new ManagerMenuState()
+        new ManagerMenuState(),
+        new ClerkClientsState()
     };
     private final Deque<State> previousStates = new ArrayDeque<State>();
     private State currentState = states[OpeningState.ID];
@@ -158,7 +165,7 @@ public final class Context {
 
     /** Applies a transition through the state-by-event matrix, then shows the new state. */
     public void transition(int event) {
-        if (currentState == null || event < EXIT || event > BECOME_CLERK) {
+        if (currentState == null || event < EXIT || event > BACK) {
             throw new IllegalArgumentException("Unknown FSM transition.");
         }
         int targetId = TRANSITIONS[currentState.getId()][event];
